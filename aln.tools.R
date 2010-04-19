@@ -161,6 +161,7 @@ plot.aln = function(file,
   colors=NULL,
   square=F,
   ylim=NULL,xlim=NULL,
+  x.lim=NULL,y.lim=NULL,
   draw.chars=F,
   char.col='black',
   grid.lines=T,
@@ -243,11 +244,6 @@ plot.aln = function(file,
     }
   }
 
-  rowSize = 1;
-  colSize = 1;
-  offsetY = 0
-  offsetX = 0
-
   # Plot tree alongside alignment.
   if (!is.null(aln$tree) & plot.tree) {
     library(ape)
@@ -259,6 +255,8 @@ plot.aln = function(file,
     total.bl = sum(tree$edge.length)
     tree.width = tree.width * total.bl / tree.max.bl
     tree.pad = 5
+
+    rowSize = 1
 
     loX = -tree.width - tree.pad
     hiX = -tree.pad
@@ -285,13 +283,32 @@ plot.aln = function(file,
 
   if (!is.null(aln$tree)) {
     # Make sure the alignment is sorted by the tree display order.
+    tree = aln$tree
     newPositions = match(aln$names,tree$tip.label)
     aln$seqs[newPositions] = aln$seqs
     aln$names[newPositions] = aln$names
 
     aln$seqs = rev(aln$seqs)
     aln$names = rev(aln$names)
-}
+  }
+
+  rowSize = 1;
+  colSize = 1;
+  offsetY = 0
+  offsetX = 0
+
+  # Adjust rowsize and offsets if we're plotting within a certain region.
+  if (overlay) {
+    if (!is.null(x.lim)) {
+      offsetX = x.lim[1]
+      colSize = diff(x.lim) / numCols 
+    }
+
+    if (!is.null(y.lim)) {
+      offsetY = y.lim[1]
+      rowSize = (diff(y.lim)) / numRows
+    }
+  }
 
   arr= matrix(unlist(aln$seqs),nrow=numRows,ncol=numCols,byrow=TRUE)
   color.arr = NULL
@@ -307,13 +324,13 @@ plot.aln = function(file,
     
     loXs = seq(0,numCols-1) * colSize + offsetX
     hiXs = seq(1,numCols) * colSize + offsetX
-    loXs = loXs + 0.5
-    hiXs = hiXs + 0.5
-    loYs = rep(ylim[2] - rowSize*(i-1),numCols) - offsetY
-    hiYs = rep(ylim[2] - rowSize*(i),numCols) - offsetY
+#    loXs = loXs + 0.5
+#    hiXs = hiXs + 0.5
+    loYs = rep(ylim[2] - rowSize*(i-1),numCols) + offsetY
+    hiYs = rep(ylim[2] - rowSize*(i),numCols) + offsetY
 
-    loYs = loYs - 0.5
-    hiYs = hiYs - 0.5
+#    loYs = loYs - 0.5
+#    hiYs = hiYs - 0.5
 
     # Grid line.
     if (grid.lines) {
@@ -572,4 +589,17 @@ plot.aln.bars = function(aln,xlim=NULL,ylim=c(-1,1),draw.text=T) {
   bigText = as.character(bigBars);
   text(x=bigBars,y=0.5,labels=bigText,pos=4);
 
+}
+
+
+sort.aln.by.tree = function(aln,tree) {
+  # Make sure the alignment is sorted by the tree display order.
+  newPositions = match(aln$names,tree$tip.label)
+
+  aln$seqs[newPositions] = aln$seqs
+  aln$names[newPositions] = aln$names
+
+  aln$seqs = rev(aln$seqs)
+  aln$names = rev(aln$names)
+  return(aln)
 }
