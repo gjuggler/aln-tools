@@ -6,6 +6,48 @@ read.slr = function(file) {
   return(read.table(file,header=T,sep="\t"))
 }
 
+plot.slr.type = function(slr,xlim=NULL,type) {
+  minr=1
+  maxr = max(slr$site)
+
+  ylim=c(-1,1)
+  if (is.null(xlim)) xlim = c(1,maxr)
+
+  if (type == "positive") {
+    prefix = "posi"
+    nc.col = rgb(.7,.5,.5)
+    c.col = rgb(.6,0,0)
+  } else {
+    prefix = "nega"
+    nc.col = rgb(.5,.5,.7)
+    c.col = rgb(0,0,.6)
+  }
+ 
+  nocorr = paste(prefix,"tive",c(1,2),sep="")
+  corr = paste(prefix,"tive",c(3,4),sep="")
+
+  nc = slr[slr$type %in% nocorr,]
+  c = slr[slr$type %in% corr,]
+
+  plot.new()
+  plot.window(xlim=xlim,ylim=ylim)
+  rect(
+    xleft = nc$site-.5,
+    ybottom = rep(-1,nrow(nc)),
+    xright = nc$site+.5,
+    ytop = rep(1,nrow(nc)),
+    col = nc.col,
+    border = NA)
+
+  rect(
+    xleft = c$site-.5,
+    ybottom = rep(-1,nrow(c)),
+    xright = c$site+.5,
+    ytop = rep(1,nrow(c)),
+    col = c.col,
+    border = NA)
+}
+
 plot.slr.types = function(slr,xlim=NULL) {
   minr=1
   maxr=max(slr$site)
@@ -45,11 +87,11 @@ plot.slr.blocks = function(slr,
   }
 
   names(slr)
-  print(slr[1,])
+#  print(slr[1,])
   minr = 1
   maxr = nrow(slr)
 
-  log_lo = 0.001
+  log_lo = 0.01
 
   # Make sure the axis type is correct.
   par(xaxs='i')
@@ -57,7 +99,7 @@ plot.slr.blocks = function(slr,
   if (!overlay) {
     if(is.null(xlim)) xlim = c(minr,maxr)
     if (log) {
-      plot(NULL,xlim=xlim,ylim=c(log_lo,100),xlab="Site",ylab="Omega",log='y',axes=F,...)
+      plot(NULL,xlim=xlim,ylim=c(log_lo,10),xlab="Site",ylab="Omega",log='y',axes=F,...)
     } else {
       plot(NULL,xlim=xlim,ylim=c(0,5),xlab="Site",ylab="Omega",log='',axes=F,...)
     }
